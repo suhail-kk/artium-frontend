@@ -1,16 +1,45 @@
+import { COLORS } from "./lib/constants/colors";
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
+    "./lib/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+      colors: {
+        background: "var(--background)",
+        foreground: "var(--foreground)",
+        primary: COLORS.primary,
+        secondary: COLORS.secondary,
+        tertiary: COLORS.tertiary,
+        blue: {
+          primary: "#091057",
+          secondary: "#024CAA",
+        },
+        orange: {
+          primary: "#EC8305",
+        },
+        gray: {
+          primary: "#DBD3D3",
+          secondary: "#666",
+        },
+        red: {
+          primary: "#C62E2E",
+        },
+        green: {
+          primary: "#6EC207",
+        },
+        yellow: {
+          primary: "#FDDE55",
+        },
+      },
+      textColor: {
+        primary: COLORS.primary,
+        secondary: COLORS.secondary,
+        tertiary: COLORS.tertiary,
       },
     },
   },
