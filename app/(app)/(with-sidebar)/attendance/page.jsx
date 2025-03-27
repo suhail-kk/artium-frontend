@@ -7,6 +7,13 @@ import { Table } from 'antd'
 import CustomPagination from '@/lib/components/input/CustomPagination'
 import SearchInput from '@/lib/components/input/SearchInput'
 import Link from 'next/link'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import useToast from '@/lib/hooks/useToast'
+import useDebounce from '@/lib/hooks/useDebounce'
+import useApi from '@/lib/hooks/useApi'
+import { deleteAttendance, getAttendance } from '@/lib/services/attendence'
+import Button from '@/lib/components/display/Button'
+import MarkAttendanceModal from '@/lib/components/pages/attendance/MarkAttendanceModal'
 
 const data = [
     {
@@ -51,6 +58,20 @@ const data = [
 ]
 export default function Page() {
     const [page, setPage] = useState(1)
+    const [query, setQuery] = useState("")
+    const [modal, setModal] = useState(false)
+    const [selectedEvent, setSelectedEvent] = useState(null);
+
+    const queryClient = useQueryClient()
+    const { error, success } = useToast()
+    const debouncedQuery = useDebounce(query, 300);
+
+    const API_deleteAttendance = useApi(deleteAttendance)
+
+    const { data, isLoading } = useQuery({
+        queryKey: ["attendance-list", page, debouncedQuery],
+        queryFn: () => getAttendance({ search: debouncedQuery, page, limit: 10 }),
+    });
 
     const columns = [
         {
@@ -104,14 +125,41 @@ export default function Page() {
     const onPaginationChange = (page) => {
         setPage(page)
     }
+
+    const handleModal = (eventData = null) => {
+        setSelectedEvent(eventData);
+        setModal(!modal);
+    };
+
+    const handleDeleteAttendance = async (id) => {
+        try {
+            const { isError } = await API_deleteAttendance.request(id)
+            if (isError) {
+                error("Failed to delete attendance data")
+            } else {
+                success("Attendance deleted successfully")
+                queryClient.invalidateQueries(["attendance-list"])
+            }
+        } catch (error) {
+
+        }
+    }
+
+    const meta = data?.meta || {};
+    const attendance_data = data?.data || [];
+
     return (<div className='w-full mt-4 flex flex-col gap-4 items-center'>
         <div className='w-full flex justify-between items-center'>
-            <p className='text-lg sm:text-2xl text-primary font-semibold w-full text-start'>attendance</p>
-            <SearchInput />
+            <p className='text-lg sm:text-2xl text-primary font-semibold w-full text-start'>Attendance</p>
+            <div className='w-3/4 flex justify-end gap-4'>
+                <Button onClick={() => setModal(true)} additionalClass="w-32 !py-2">Add New</Button>
+                <SearchInput onChange={(e) => setQuery(e.target.value)} value={query} />
+                <MarkAttendanceModal modal={modal} handlecloseModal={() => setModal(false)} data={selectedEvent} />
+            </div>
         </div>
         <div className='w-full'>
-            <Table pagination={false} columns={columns} dataSource={data} />
+            <Table pagination={false} columns={columns} dataSource={attendance_data} />
         </div>
-        <CustomPagination page={page} onChange={onPaginationChange} pageSize={10} totalCount={data?.length} />
+        <CustomPagination page={page} onChange={onPaginationChange} pageSize={10} totalCount={meta?.total} />
     </div>)
 }
